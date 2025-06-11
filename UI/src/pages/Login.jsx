@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useNavigate } from "react-router-dom" // Add this import for navigation
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../hooks/useAuth"
 import {
   Heart,
   Mail,
@@ -17,6 +18,7 @@ import {
   BookOpen,
   Star,
   ArrowRight,
+  AlertCircle,
 } from "lucide-react"
 
 export default function Login() {
@@ -24,21 +26,33 @@ export default function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
-  const navigate = useNavigate() // Add navigation hook
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate()
+  const { login } = useAuth()
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Login attempt:", { email, password, rememberMe })
-    // Add your login logic here
+    setIsLoading(true)
+    setErrorMessage("")
+
+    try {
+      await login({ email, password })
+      navigate("/fyp")
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Failed to login. Please check your credentials.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleForgotPassword = () => {
-    console.log("Navigate to forgot password")
-    // You can add: navigate('/forgot-password') when you create that route
+    navigate("/forgot-password")
   }
 
   const handleSignUp = () => {
-    navigate("/register") // Navigate to register page
+    navigate("/register")
   }
 
   const features = [
@@ -238,6 +252,14 @@ export default function Login() {
                 </div>
               </div>
 
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-600 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  {errorMessage}
+                </div>
+              )}
+
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1">
@@ -311,10 +333,17 @@ export default function Login() {
 
                 <button
                   type="submit"
-                  className="w-full h-10 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 group text-sm"
+                  disabled={isLoading}
+                  className="w-full h-10 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 group text-sm disabled:opacity-70"
                 >
-                  Sign in to Pettit
-                  <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                  {isLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      Sign in to Pettit
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
               </form>
 
