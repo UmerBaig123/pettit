@@ -8,6 +8,7 @@ import "./index.css"
 import Login from "./pages/Login.jsx"
 import Register from "./pages/Register.jsx"
 import FYP from "./pages/fyp.jsx"
+import CreatePost from "./pages/CreatePost.jsx"
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -25,6 +26,14 @@ createRoot(document.getElementById("root")).render(
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/create-post"
+              element={
+                <ProtectedRoute>
+                  <CreatePost />
+                </ProtectedRoute>
+              }
+              />
             <Route path="/" element={<Login />} />
           </Routes>
         </BrowserRouter>
