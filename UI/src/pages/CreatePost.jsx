@@ -20,14 +20,19 @@ const CreatePost = () => {
 
   // Fetch available subreddits
   useEffect(() => {
-    // Sample subreddits data
-    setSubreddits([
-      { id: "1", name: "AdoptDontShop", displayName: "Adopt Don't Shop" },
-      { id: "2", name: "DogTraining", displayName: "Dog Training" },
-      { id: "3", name: "CatsOfReddit", displayName: "Cats of Reddit" },
-      { id: "4", name: "PetAdvice", displayName: "Pet Advice" },
-      { id: "5", name: "Rabbits", displayName: "Rabbits" },
-    ])
+    const fetchSubreddits = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/subreddits")
+        const data = await response.json()
+        setSubreddits(data.subreddits || data)
+      } catch (error) {
+        console.error("Error fetching subreddits:", error)
+        // Fallback to empty array if API fails
+        setSubreddits([])
+      }
+    }
+
+    fetchSubreddits()
   }, [])
 
   const handleInputChange = (e) => {
@@ -79,15 +84,76 @@ const CreatePost = () => {
     setLoading(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Form submitted:", formData)
-      console.log("File:", selectedFile)
+      // Create FormData for file upload
+      const formDataToSend = new FormData()
+      formDataToSend.append("title", formData.title)
+      formDataToSend.append("content", formData.content)
+      formDataToSend.append("subredditId", formData.subreddit)
+      formDataToSend.append("tags", JSON.stringify(formData.tags))
 
-      // Navigate back to feed after successful submission
+      // Add file if selected
+      if (selectedFile) {
+        formDataToSend.append("media", selectedFile)
+      }
+
+      // Get auth token from localStorage
+      const token = localStorage.getItem("token")
+
+      console.log("Sending request to create post:", {
+        title: formData.title,
+        subredditId: formData.subreddit,
+        contentLength: formData.content.length,
+        tags: formData.tags,
+        hasFile: !!selectedFile,
+      })
+
+      // First, test if the server is responding at all
+      const healthCheck = await fetch("/health")
+      console.log("Health check status:", healthCheck.status)
+
+      // Now try to create the post
+      const response = await fetch("http://localhost:5000/api/posts", {
+        method: "POST",
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formDataToSend,
+      })
+
+      console.log("Response status:", response.status)
+      console.log("Response headers:", Object.fromEntries([...response.headers.entries()]))
+
+      // Check if response is empty
+      const responseText = await response.text()
+      console.log("Raw response:", responseText)
+
+      if (!responseText) {
+        throw new Error("Server returned an empty response")
+      }
+
+      // Try to parse the response as JSON
+      let result
+      try {
+        result = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", parseError)
+        throw new Error("Server returned an invalid JSON response")
+      }
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to create post")
+      }
+
+      console.log("Post created successfully:", result)
+
+      // Show success message
+      alert("Post created successfully!")
+
+      // Navigate back to feed
       navigate("/fyp")
     } catch (error) {
-      console.error("Error submitting post:", error)
+      console.error("Error creating post:", error)
+      alert(`Error creating post: ${error.message}`)
     } finally {
       setLoading(false)
     }
@@ -167,7 +233,7 @@ const CreatePost = () => {
               >
                 <option value="">Select a subreddit...</option>
                 {subreddits.map((subreddit) => (
-                  <option key={subreddit.id} value={subreddit.name}>
+                  <option key={subreddit._id} value={subreddit._id}>
                     r/{subreddit.name}
                   </option>
                 ))}
