@@ -74,6 +74,10 @@ connectDB()
 // Route files
 const authRoutes = require("./routes/authRoutes")
 app.use("/api/auth", authRoutes)
+const postRoutes = require("./routes/postRoutes")
+app.use("/api/posts", postRoutes)
+const subredditRoutes = require("./routes/subredditRoutes")
+app.use("/api/subreddits", subredditRoutes)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
