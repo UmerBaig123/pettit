@@ -1,103 +1,117 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { PawPrint, Search, Bell, User, ImageIcon, Hash, X, Upload, ArrowLeft } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  PawPrint,
+  Search,
+  Bell,
+  User,
+  ImageIcon,
+  Hash,
+  X,
+  Upload,
+  ArrowLeft,
+} from "lucide-react";
+import Navbar from "../components/navbar/Navbar";
 
 const CreatePost = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     subreddit: "",
     tags: [],
-  })
-  const [tagInput, setTagInput] = useState("")
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [previewUrl, setPreviewUrl] = useState(null)
-  const [subreddits, setSubreddits] = useState([])
-  const [loading, setLoading] = useState(false)
+  });
+  const [tagInput, setTagInput] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [subreddits, setSubreddits] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Fetch available subreddits
   useEffect(() => {
     const fetchSubreddits = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/subreddits")
-        const data = await response.json()
-        setSubreddits(data.subreddits || data)
+        const response = await fetch("http://localhost:5000/api/subreddits");
+        const data = await response.json();
+        setSubreddits(data.subreddits || data);
       } catch (error) {
-        console.error("Error fetching subreddits:", error)
+        console.error("Error fetching subreddits:", error);
         // Fallback to empty array if API fails
-        setSubreddits([])
+        setSubreddits([]);
       }
-    }
+    };
 
-    fetchSubreddits()
-  }, [])
+    fetchSubreddits();
+  }, []);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (file) {
-      setSelectedFile(file)
-      const fileReader = new FileReader()
+      setSelectedFile(file);
+      const fileReader = new FileReader();
       fileReader.onload = () => {
-        setPreviewUrl(fileReader.result)
-      }
-      fileReader.readAsDataURL(file)
+        setPreviewUrl(fileReader.result);
+      };
+      fileReader.readAsDataURL(file);
     }
-  }
+  };
 
   const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim().toLowerCase())) {
+    if (
+      tagInput.trim() &&
+      !formData.tags.includes(tagInput.trim().toLowerCase())
+    ) {
       setFormData((prev) => ({
         ...prev,
         tags: [...prev.tags, tagInput.trim().toLowerCase()],
-      }))
-      setTagInput("")
+      }));
+      setTagInput("");
     }
-  }
+  };
 
   const removeTag = (tagToRemove) => {
     setFormData((prev) => ({
       ...prev,
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }))
-  }
+    }));
+  };
 
   const handleTagKeyPress = (e) => {
     if (e.key === "Enter") {
-      e.preventDefault()
-      addTag()
+      e.preventDefault();
+      addTag();
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       // Create FormData for file upload
-      const formDataToSend = new FormData()
-      formDataToSend.append("title", formData.title)
-      formDataToSend.append("content", formData.content)
-      formDataToSend.append("subredditId", formData.subreddit)
-      formDataToSend.append("tags", JSON.stringify(formData.tags))
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("content", formData.content);
+      formDataToSend.append("subredditId", formData.subreddit);
+      formDataToSend.append("tags", JSON.stringify(formData.tags));
 
       // Add file if selected
       if (selectedFile) {
-        formDataToSend.append("media", selectedFile)
+        formDataToSend.append("media", selectedFile);
       }
 
       // Get auth token from localStorage
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
 
       console.log("Sending request to create post:", {
         title: formData.title,
@@ -105,11 +119,11 @@ const CreatePost = () => {
         contentLength: formData.content.length,
         tags: formData.tags,
         hasFile: !!selectedFile,
-      })
+      });
 
       // First, test if the server is responding at all
-      const healthCheck = await fetch("/health")
-      console.log("Health check status:", healthCheck.status)
+      const healthCheck = await fetch("/health");
+      console.log("Health check status:", healthCheck.status);
 
       // Now try to create the post
       const response = await fetch("http://localhost:5000/api/posts", {
@@ -118,96 +132,60 @@ const CreatePost = () => {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: formDataToSend,
-      })
+      });
 
-      console.log("Response status:", response.status)
-      console.log("Response headers:", Object.fromEntries([...response.headers.entries()]))
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries([...response.headers.entries()])
+      );
 
       // Check if response is empty
-      const responseText = await response.text()
-      console.log("Raw response:", responseText)
+      const responseText = await response.text();
+      console.log("Raw response:", responseText);
 
       if (!responseText) {
-        throw new Error("Server returned an empty response")
+        throw new Error("Server returned an empty response");
       }
 
       // Try to parse the response as JSON
-      let result
+      let result;
       try {
-        result = JSON.parse(responseText)
+        result = JSON.parse(responseText);
       } catch (parseError) {
-        console.error("Failed to parse response as JSON:", parseError)
-        throw new Error("Server returned an invalid JSON response")
+        console.error("Failed to parse response as JSON:", parseError);
+        throw new Error("Server returned an invalid JSON response");
       }
 
       if (!response.ok) {
-        throw new Error(result.message || "Failed to create post")
+        throw new Error(result.message || "Failed to create post");
       }
 
-      console.log("Post created successfully:", result)
+      console.log("Post created successfully:", result);
 
       // Show success message
-      alert("Post created successfully!")
+      alert("Post created successfully!");
 
       // Navigate back to feed
-      navigate("/fyp")
+      navigate("/fyp");
     } catch (error) {
-      console.error("Error creating post:", error)
-      alert(`Error creating post: ${error.message}`)
+      console.error("Error creating post:", error);
+      alert(`Error creating post: ${error.message}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-orange-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-lg flex items-center justify-center">
-                <PawPrint className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
-                  Pettit
-                </h1>
-                <p className="text-xs text-gray-600 -mt-1">Pet Community Platform</p>
-              </div>
-            </div>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-xl mx-8">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search communities, posts, or users..."
-                  className="w-full pl-10 pr-4 h-10 border border-gray-200 rounded-full focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-all duration-200 outline-none text-sm bg-gray-50"
-                />
-              </div>
-            </div>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-4">
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <Bell className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <User className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
           onClick={() => navigate("/fyp")}
-          className="flex items-center gap-2 text-gray-600 hover:text-orange-600 mb-6 transition-colors"
+          className="flex items-center gap-2 text-gray-600 hover:text-orange-600 mb-6 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Feed
@@ -215,12 +193,17 @@ const CreatePost = () => {
 
         {/* Create Post Form */}
         <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Create a New Post</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            Create a New Post
+          </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Subreddit Selection */}
             <div>
-              <label htmlFor="subreddit" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="subreddit"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Choose a Community *
               </label>
               <select
@@ -242,7 +225,10 @@ const CreatePost = () => {
 
             {/* Title */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Title *
               </label>
               <input
@@ -259,7 +245,10 @@ const CreatePost = () => {
 
             {/* Content */}
             <div>
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="content"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Content *
               </label>
               <textarea
@@ -276,7 +265,10 @@ const CreatePost = () => {
 
             {/* Tags */}
             <div>
-              <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="tags"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Tags (Optional)
               </label>
               <div className="flex gap-2 mb-2">
@@ -321,26 +313,40 @@ const CreatePost = () => {
 
             {/* Image Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Add Image (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Add Image (Optional)
+              </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors">
-                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" id="file-upload" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="file-upload"
+                />
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600">Click to upload an image or drag and drop</p>
-                  <p className="text-gray-500 text-sm mt-1">JPG, PNG, GIF up to 5MB</p>
+                  <p className="text-gray-600">
+                    Click to upload an image or drag and drop
+                  </p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    JPG, PNG, GIF up to 5MB
+                  </p>
                 </label>
               </div>
               {selectedFile && (
                 <div className="mt-2 flex items-center justify-between bg-gray-50 p-2 rounded-lg">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm text-gray-700 truncate">{selectedFile.name}</span>
+                    <span className="text-sm text-gray-700 truncate">
+                      {selectedFile.name}
+                    </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      setSelectedFile(null)
-                      setPreviewUrl(null)
+                      setSelectedFile(null);
+                      setPreviewUrl(null);
                     }}
                     className="text-red-500 hover:text-red-700 transition-colors"
                   >
@@ -371,7 +377,7 @@ const CreatePost = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CreatePost
+export default CreatePost;
