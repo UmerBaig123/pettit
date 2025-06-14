@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { User, Settings, Bookmark, Plus, LogOut, ChevronDown } from 'lucide-react';
 import { PawPrint, Search, Bell} from "lucide-react";
 import { useEffect, useRef } from 'react';
+import { useAuth } from "../../hooks/useAuth";
 
 const Navbar = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -12,12 +13,12 @@ const Navbar = () => {
         setIsProfileDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+  const { logout } = useAuth();
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -125,8 +126,7 @@ const Navbar = () => {
                       className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
-                        // Add logout logic here
-                        console.log('Logout clicked');
+                        logout(); 
                       }}
                     >
                       <LogOut className="w-4 h-4 mr-3" />
