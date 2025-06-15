@@ -7,6 +7,7 @@ import {
   Star,
   Clock,
 } from "lucide-react";
+
 const PostCard = ({ post }) => {
   return (
     <div
@@ -18,7 +19,7 @@ const PostCard = ({ post }) => {
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <img
-              src={post.user.avatar || "/placeholder.svg"}
+              src={post.user.avatar || "placeholder.png"}
               alt={post.user.name}
               className="w-10 h-10 rounded-full object-cover"
             />
@@ -73,10 +74,16 @@ const PostCard = ({ post }) => {
 
       {/* Post Image */}
       {post.media && (
-        <div className="px-4">
+        <div
+          className="px-4"
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            window.open("http://localhost:5000" + post?.media[0].url, "_blank")
+          }
+        >
           <img
             src={
-              "http://localhost:5000/" + post?.media?.url || "/placeholder.svg"
+              "http://localhost:5000" + post?.media[0].url || "/placeholder.svg"
             }
             alt="Post content"
             className="w-full h-64 object-cover rounded-lg"

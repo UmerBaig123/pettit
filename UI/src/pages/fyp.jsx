@@ -20,6 +20,7 @@ export default function ForYou() {
     })
       .then((response) => response.json())
       .then((data) => {
+        console.log("Fetched posts:", data);
         setPosts(data.posts);
         setTotalPages(data.totalPages);
       })
