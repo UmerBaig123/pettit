@@ -94,7 +94,7 @@ export default function Register() {
   const passwordStrength = getPasswordStrength(password)
 
   return (
-    <div className="h-screen w-full relative overflow-hidden">
+    <div className="h-screen w-full relative overflow-hidden flex">
       {/* Custom Pet-themed Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-rose-50 to-violet-100">
         {/* Paw Print Pattern Background */}
@@ -251,7 +251,7 @@ export default function Register() {
         </div>
 
         {/* Right Side - Register Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4">
           <div className="w-full max-w-sm">
             {/* Mobile Logo */}
             <div className="lg:hidden text-center mb-6">
@@ -267,11 +267,11 @@ export default function Register() {
             </div>
 
             {/* Register Card */}
-            <div className="bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border-0 p-6">
+            <div className="bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border-0 p-5">
               {/* Header */}
-              <div className="mb-5">
+              <div className="mb-4">
                 <h2 className="text-xl font-bold text-gray-800 mb-1">Create an account</h2>
-                <p className="text-gray-600 text-sm">Join the Pettit community today</p>
+                <p className="text-gray-600 text-xs">Join the Pettit community today</p>
               </div>
 
               {/* Error Message */}
@@ -425,7 +425,7 @@ export default function Register() {
               </form>
 
               {/* Footer */}
-              <div className="mt-5 pt-4 border-t border-gray-200">
+              <div className="mt-4 pt-3 border-t border-gray-200">
                 <div className="text-center mb-3">
                   <span className="text-gray-600 text-xs">Already have an account? </span>
                   <button
@@ -445,8 +445,8 @@ export default function Register() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="mt-4 flex items-center justify-center gap-3">
-              <div className="bg-green-100 text-green-700 border border-green-200 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+            <div className="mt-3 flex items-center justify-center gap-2">
+              <div className="bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1">
                 <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
                 Secure & Private
               </div>
