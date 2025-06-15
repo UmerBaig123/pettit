@@ -5,6 +5,7 @@ import { AuthProvider } from "./contexts/AuthContext"
 import { ProtectedRoute } from "./components/ProtectedRoute"
 import { ThemeProvider } from "./contexts/ThemeProvider"
 import "./index.css"
+import Landing from "./pages/LandingPage.jsx"
 import Login from "./pages/Login.jsx"
 import Register from "./pages/Register.jsx"
 import FYP from "./pages/fyp.jsx"
@@ -34,7 +35,7 @@ createRoot(document.getElementById("root")).render(
                 </ProtectedRoute>
               }
               />
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Landing />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
