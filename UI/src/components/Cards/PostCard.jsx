@@ -72,10 +72,12 @@ const PostCard = ({ post }) => {
       </div>
 
       {/* Post Image */}
-      {post.image && (
+      {post.media && (
         <div className="px-4">
           <img
-            src={post.image || "/placeholder.svg"}
+            src={
+              "http://localhost:5000/" + post?.media?.url || "/placeholder.svg"
+            }
             alt="Post content"
             className="w-full h-64 object-cover rounded-lg"
           />
