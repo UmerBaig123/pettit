@@ -3,10 +3,19 @@ import { User, Settings, Bookmark, Plus, LogOut, ChevronDown } from 'lucide-reac
 import { PawPrint, Search, Bell} from "lucide-react";
 import { useEffect, useRef } from 'react';
 import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/fyp?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -40,14 +49,16 @@ const Navbar = () => {
 
           {/* Search Bar */}
           <div className="flex-1 max-w-xl mx-8">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}  
                 placeholder="Search communities, posts, or users..."
                 className="w-full pl-10 pr-4 h-10 border border-gray-200 rounded-full focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-all duration-200 outline-none text-sm bg-gray-50"
               />
-            </div>
+            </form>
           </div>
 
           {/* Right Actions */}

@@ -558,4 +558,74 @@ router.get("/saved", protect, async (req, res) => {
   }
 });
 
+// Add this to your API/routes/postRoutes.js
+router.get('/search', async (req, res) => {
+  try {
+    const { q, type = 'all', sort = 'relevance' } = req.query;
+    
+    if (!q || q.trim().length === 0) {
+      return res.json({ posts: [], subreddits: [], users: [] });
+    }
+
+    const searchTerm = q.trim();
+    const searchRegex = new RegExp(searchTerm, 'i'); // Case insensitive
+
+    let results = { posts: [], subreddits: [], users: [] };
+
+    // Search Posts
+    if (type === 'all' || type === 'posts') {
+      const postQuery = {
+        $or: [
+          { title: searchRegex },
+          { content: searchRegex }
+        ]
+      };
+
+      let postsQuery = Post.find(postQuery)
+        .populate('author', 'username')
+        .populate('subreddit', 'name')
+        .limit(20);
+
+      // Apply sorting
+      switch (sort) {
+        case 'new':
+          postsQuery = postsQuery.sort({ createdAt: -1 });
+          break;
+        case 'top':
+          postsQuery = postsQuery.sort({ upvotes: -1 });
+          break;
+        case 'relevance':
+        default:
+          // Simple relevance: title matches first, then content matches
+          postsQuery = postsQuery.sort({ createdAt: -1 });
+          break;
+      }
+
+      results.posts = await postsQuery;
+    }
+
+    // Search Subreddits
+    if (type === 'all' || type === 'communities') {
+      results.subreddits = await Subreddit.find({
+        $or: [
+          { name: searchRegex },
+          { description: searchRegex }
+        ]
+      }).limit(10);
+    }
+
+    // Search Users
+    if (type === 'all' || type === 'users') {
+      results.users = await User.find({
+        username: searchRegex
+      }).select('username').limit(10);
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Search failed' });
+  }
+});
+
 module.exports = router;
