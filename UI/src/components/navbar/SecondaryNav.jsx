@@ -6,7 +6,9 @@ import {
   Bookmark,
   Plus,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 const SecondaryNav = () => {
+  const navigate = useNavigate();
   return (
     <div className="lg:col-span-1">
       <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/30 shadow-lg sticky top-24">
@@ -37,6 +39,7 @@ const SecondaryNav = () => {
           <button
             className="w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-semibold rounded-lg py-2 px-4 transition-all duration-200 flex items-center justify-center gap-2"
             style={{ cursor: "pointer" }}
+            onClick={() => navigate("/create-post")}
           >
             <Plus className="w-4 h-4" />
             Create Post
