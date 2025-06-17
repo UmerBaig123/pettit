@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
 const Subreddit = require("../models/Subreddit");
+const User = require("../models/User");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -176,6 +177,78 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/posts/search - Search posts, subreddits, and users
+router.get('/search', async (req, res) => {
+  try {
+    console.log('Search endpoint hit with query:', req.query); // Debug log
+    
+    const { q, type = 'all', sort = 'relevance' } = req.query;
+    
+    if (!q || q.trim().length === 0) {
+      return res.json({ posts: [], subreddits: [], users: [] });
+    }
+
+    const searchTerm = q.trim();
+    const searchRegex = new RegExp(searchTerm, 'i');
+
+    let results = { posts: [], subreddits: [], users: [] };
+
+    if (type === 'all' || type === 'posts') {
+      const postQuery = {
+        $or: [
+          { title: searchRegex },
+          { content: searchRegex }
+        ],
+        isActive: true,
+        isRemoved: false
+      };
+
+      let postsQuery = Post.find(postQuery)
+        .populate('user', 'username') 
+        .populate('subreddit', 'name')
+        .limit(20);
+
+      switch (sort) {
+        case 'new':
+          postsQuery = postsQuery.sort({ createdAt: -1 });
+          break;
+        case 'top':
+          postsQuery = postsQuery.sort({ voteScore: -1 }); 
+          break;
+        case 'relevance':
+        default:
+          postsQuery = postsQuery.sort({ createdAt: -1 });
+          break;
+      }
+
+      results.posts = await postsQuery;
+    }
+
+    // Search Subreddits
+    if (type === 'all' || type === 'communities') {
+      results.subreddits = await Subreddit.find({
+        $or: [
+          { name: searchRegex },
+          { description: searchRegex }
+        ]
+      }).limit(10);
+    }
+
+    // Search Users
+    if (type === 'all' || type === 'users') {
+      results.users = await User.find({
+        username: searchRegex
+      }).select('username').limit(10);
+    }
+
+    console.log('Search results:', results); // Debug log
+    res.json(results);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Search failed', error: error.message });
+  }
+});
+
 // GET /api/posts/trending - Get trending posts
 router.get("/trending", async (req, res) => {
   try {
@@ -187,28 +260,6 @@ router.get("/trending", async (req, res) => {
     res.json(formattedPosts);
   } catch (error) {
     console.error("Error fetching trending posts:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// GET /api/posts/:id - Get single post
-router.get("/:id", async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id)
-      .populate("user", "username avatar verified")
-      .populate("subreddit", "name displayName");
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    // Increment view count
-    post.views += 1;
-    await post.save();
-
-    res.json(formatPostResponse(post, req));
-  } catch (error) {
-    console.error("Error fetching post:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -558,73 +609,25 @@ router.get("/saved", protect, async (req, res) => {
   }
 });
 
-// Add this to your API/routes/postRoutes.js
-router.get('/search', async (req, res) => {
+// GET /api/posts/:id - Get single post
+router.get("/:id", async (req, res) => {
   try {
-    const { q, type = 'all', sort = 'relevance' } = req.query;
-    
-    if (!q || q.trim().length === 0) {
-      return res.json({ posts: [], subreddits: [], users: [] });
+    const post = await Post.findById(req.params.id)
+      .populate("user", "username avatar verified")
+      .populate("subreddit", "name displayName");
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
     }
 
-    const searchTerm = q.trim();
-    const searchRegex = new RegExp(searchTerm, 'i'); // Case insensitive
+    // Increment view count
+    post.views += 1;
+    await post.save();
 
-    let results = { posts: [], subreddits: [], users: [] };
-
-    // Search Posts
-    if (type === 'all' || type === 'posts') {
-      const postQuery = {
-        $or: [
-          { title: searchRegex },
-          { content: searchRegex }
-        ]
-      };
-
-      let postsQuery = Post.find(postQuery)
-        .populate('author', 'username')
-        .populate('subreddit', 'name')
-        .limit(20);
-
-      // Apply sorting
-      switch (sort) {
-        case 'new':
-          postsQuery = postsQuery.sort({ createdAt: -1 });
-          break;
-        case 'top':
-          postsQuery = postsQuery.sort({ upvotes: -1 });
-          break;
-        case 'relevance':
-        default:
-          // Simple relevance: title matches first, then content matches
-          postsQuery = postsQuery.sort({ createdAt: -1 });
-          break;
-      }
-
-      results.posts = await postsQuery;
-    }
-
-    // Search Subreddits
-    if (type === 'all' || type === 'communities') {
-      results.subreddits = await Subreddit.find({
-        $or: [
-          { name: searchRegex },
-          { description: searchRegex }
-        ]
-      }).limit(10);
-    }
-
-    // Search Users
-    if (type === 'all' || type === 'users') {
-      results.users = await User.find({
-        username: searchRegex
-      }).select('username').limit(10);
-    }
-
-    res.json(results);
+    res.json(formatPostResponse(post, req));
   } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ message: 'Search failed' });
+    console.error("Error fetching post:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
